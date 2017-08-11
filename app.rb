@@ -1,5 +1,7 @@
 require 'sinatra'
+# require 'sinatra/reloader'
 
 get '/' do
-  "Hello World!"
+  @page_title = "home"
+  erb :home
 end
