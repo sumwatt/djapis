@@ -35,7 +35,7 @@ register do
     end
   end
 
-
+# Utlity method for setting up authentication
   def session_request_xml(uid, pwd, ns)
     xml = Builder::XmlMarkup.new( :indent => 2 )
     xml.instruct! :xml, :encoding => "UTF-8"
