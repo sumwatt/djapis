@@ -5,6 +5,7 @@ require 'net/http'
 require 'builder'
 require 'httparty'
 require 'json'
+require 'base64'
 
 Dotenv.load
 
@@ -52,7 +53,7 @@ register do
 #
 before do
   # sets @user to authentication session_id
-  @user = session[:session_id]
+  @user = session[:djsession_id]
 end
 
 get '/', :auth => :user do
@@ -61,11 +62,27 @@ get '/', :auth => :user do
 end
 
 get '/session' do
-  xml = session_request_xml(ENV['DJ_USER'], ENV['DJ_PW'], ENV['DJ_NS'])
-  res = HTTParty.post('http://api.beta.dowjones.com/api/1.0/session/', body: xml, headers: {'Content-Type' => 'application/xml'}, :debug_output => $stdout)
+  if ENV['DJ_USER'] && ENV['DJ_PW'] && ENV['DJ_NS']
+    xml = session_request_xml(ENV['DJ_USER'], ENV['DJ_PW'], ENV['DJ_NS'])
+    res = HTTParty.post('http://api.beta.dowjones.com/api/1.0/session/', body: xml, headers: {'Content-Type' => 'application/xml'}, :debug_output => $stdout)
 
-  session[:account_id] = res.parsed_response["AccountId"]
-  session[:autologin_token] = res.parsed_response["AutoLoginToken"]
-  session[:session_id] = res.parsed_response["SessionId"]
-  redirect '/'
+    session[:djaccount_id] = res.parsed_response["AccountId"]
+    session[:djautologin_token] = res.parsed_response["AutoLoginToken"]
+    session[:djsession_id] = res.parsed_response["SessionId"]
+    redirect '/'
+  else
+
+  end
+end
+
+
+get '/rnctest' do
+    erb :rncform
+end
+
+post '/rnctest' do
+    auth = Base64.encode64("#{params['namespace']}/#{params['username']}:#{params['password']}")
+    response = HTTParty.get('http://djrc.api.test.dowjones.com/v1/taxonomy/region-types', headers: {'Authorization' => "Basic #{auth}" }, :debug_output => $stdout)
+    @res = response.parsed_response
+    erb :rncapi
 end
