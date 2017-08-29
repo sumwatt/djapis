@@ -20,7 +20,7 @@ Dir[File.dirname(__FILE__) + '/lib/**/.rb'].each {|file| require file}
 require 'sinatra/reloader'
 also_reload('lib/**/*.rb')
 
-# Helper
+# Auth Helper
 
 register do
     def auth (type)
@@ -53,7 +53,7 @@ register do
 #
 before do
   # sets @user to authentication session_id
-  @user = session[:djsession_id]
+  @user = session[:djenc_token]
 end
 
 get '/', :auth => :user do
@@ -64,11 +64,8 @@ end
 get '/session' do
   if ENV['DJ_USER'] && ENV['DJ_PW'] && ENV['DJ_NS']
     xml = session_request_xml(ENV['DJ_USER'], ENV['DJ_PW'], ENV['DJ_NS'])
-    res = HTTParty.post('http://api.beta.dowjones.com/api/1.0/session/', body: xml, headers: {'Content-Type' => 'application/xml'}, :debug_output => $stdout)
-
-    session[:djaccount_id] = res.parsed_response["AccountId"]
-    session[:djautologin_token] = res.parsed_response["AutoLoginToken"]
-    session[:djsession_id] = res.parsed_response["SessionId"]
+    res = HTTParty.post('http://api.beta.dowjones.com/api/1.0/session/EncryptedToken', body: xml, headers: {'Content-Type' => 'application/xml'}, :debug_output => $stdout)
+    session[:djenc_token] = res.parsed_response["EncryptedToken"]
     redirect '/'
   else
 
